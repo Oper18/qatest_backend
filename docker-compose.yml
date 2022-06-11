@@ -26,7 +26,7 @@ services:
     networks:
       - qatest-network
     depends_on:
-      - qatest_site
+      - qatest_backend
     command: npm start
 
   qatest_backend:
@@ -36,8 +36,6 @@ services:
       - C_FORCE_ROOT='true'
       - PYTHONUNBUFFERED=1
       - TZ=Europe/Moscow
-    depends_on:
-      - qatest_db
     networks:
       - qatest-network
     volumes:

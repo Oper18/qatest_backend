@@ -1,0 +1,73 @@
+version: "3.6"
+
+services:
+  qatest_nginx:
+    image: nginx:latest
+    container_name: qatest_nginx
+    volumes:
+      - nginx_config:/etc/nginx/conf.d
+    ports:
+      - 8080:80
+    depends_on:
+      - qatest_backend
+      - qatest_frontend
+    networks:
+      - qatest-network
+
+  qatest_frontend:
+    image: qatest_frontend:latest
+    container_name: qatest_frontend
+    volumes:
+      - front_source:/app
+      - /app/node_modules
+    environment:
+      - DOCKER_CLIENT_TIMEOUT=120
+      - COMPOSE_HTTP_TIMEOUT=120
+    networks:
+      - qatest-network
+    depends_on:
+      - qatest_site
+    command: npm start
+
+  qatest_backend:
+    image: qatest:latest
+    container_name: qatest_backend
+    environment:
+      - C_FORCE_ROOT='true'
+      - PYTHONUNBUFFERED=1
+      - TZ=Europe/Moscow
+    depends_on:
+      - qatest_db
+    networks:
+      - qatest-network
+    volumes:
+      - back_source:/app
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+volumes:
+  back_source:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${SITE_PATH}
+  front_source:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${FRONT_PATH}
+  nginx_config:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${SITE_PATH}/nginx/extend
+
+networks:
+  qatest-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_ADDRESS}

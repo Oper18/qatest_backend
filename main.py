@@ -46,7 +46,7 @@ async def auth(
 ) -> Union[Auth, Error40xResponse]:
     for s in "/?*$&":
         if s in auth.username or s in auth.password:
-            raise AttributeError
+            raise AttributeError("wrong character")
     async with async_open('auth.json', 'r') as f:
         users = await f.read()
         users = json.loads(users)
